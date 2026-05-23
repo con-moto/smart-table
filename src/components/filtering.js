@@ -1,7 +1,5 @@
 import {createComparison, defaultRules} from "../lib/compare.js";
 
-// @todo: #4.3 — настроить компаратор
-
 export function initFiltering(elements, indexes) {
     // #4.1 — заполнить выпадающие списки опциями
     Object.keys(indexes)
@@ -18,12 +16,31 @@ export function initFiltering(elements, indexes) {
         });
 
     return (data, state, action) => {
-        // #4.2 — обработать очистку поля (пока можно пропустить)
+        // #4.2 — обработка очистки поля (можно пока оставить пустой)
 
         // #4.3 — настроить компаратор
         const compareFn = createComparison(defaultRules);
 
-        // #4.5 — отфильтровать данные используя компаратор
-        return data.filter(row => compareFn(row, state));
+        // #4.5 — отфильтровать данные используя компаратор + диапазон по сумме
+        return data.filter(row => {
+            if (!compareFn(row, state)) {
+                return false;
+            }
+
+            const total = row.total;
+
+            const min = state.totalFrom ? parseFloat(state.totalFrom) : null;
+            const max = state.totalTo ? parseFloat(state.totalTo) : null;
+
+            if (min !== null && !Number.isNaN(min) && total < min) {
+                return false;
+            }
+
+            if (max !== null && !Number.isNaN(max) && total > max) {
+                return false;
+            }
+
+            return true;
+        });
     };
 }
