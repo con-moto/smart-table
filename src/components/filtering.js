@@ -1,46 +1,38 @@
-import {createComparison, defaultRules} from "../lib/compare.js";
+export function initFiltering(elements) {
+  const updateIndexes = (elements, indexes) => {
+    Object.keys(indexes).forEach(elementName => {
+      elements[elementName].append(
+        ...Object.values(indexes[elementName]).map(name => {
+          const el = document.createElement('option');
+          el.textContent = name;
+          el.value = name;
+          return el;
+        })
+      );
+    });
+  };
 
-export function initFiltering(elements, indexes) {
-    // #4.1 — заполнить выпадающие списки опциями
-    Object.keys(indexes)
-        .forEach((elementName) => {
-            elements[elementName].append(
-                ...Object.values(indexes[elementName])
-                    .map(name => {
-                        const option = document.createElement('option');
-                        option.value = name;
-                        option.textContent = name;
-                        return option;
-                    })
-            );
-        });
+  const applyFiltering = (query, state, action) => {
+    const filter = {};
 
-    return (data, state, action) => {
-        // #4.2 — обработка очистки поля (можно пока оставить пустой)
+    Object.keys(elements).forEach(key => {
+      if (elements[key]) {
+        if (
+          ['INPUT', 'SELECT'].includes(elements[key].tagName) &&
+          elements[key].value
+        ) {
+          filter[`filter[${elements[key].name}]`] = elements[key].value;
+        }
+      }
+    });
 
-        // #4.3 — настроить компаратор
-        const compareFn = createComparison(defaultRules);
+    return Object.keys(filter).length
+      ? Object.assign({}, query, filter)
+      : query;
+  };
 
-        // #4.5 — отфильтровать данные используя компаратор + диапазон по сумме
-        return data.filter(row => {
-            if (!compareFn(row, state)) {
-                return false;
-            }
-
-            const total = row.total;
-
-            const min = state.totalFrom ? parseFloat(state.totalFrom) : null;
-            const max = state.totalTo ? parseFloat(state.totalTo) : null;
-
-            if (min !== null && !Number.isNaN(min) && total < min) {
-                return false;
-            }
-
-            if (max !== null && !Number.isNaN(max) && total > max) {
-                return false;
-            }
-
-            return true;
-        });
-    };
+  return {
+    updateIndexes,
+    applyFiltering
+  };
 }
