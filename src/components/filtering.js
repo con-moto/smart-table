@@ -13,16 +13,27 @@ export function initFiltering(elements) {
   };
 
   const applyFiltering = (query, state, action) => {
+    if (action && action.name === 'clear') {
+      const input = action.parentElement.querySelector('input');
+
+      if (input) {
+        input.value = '';
+        if (input.dataset.field) {
+          state[input.dataset.field] = '';
+        }
+      }
+    }
+
     const filter = {};
 
     Object.keys(elements).forEach(key => {
-      if (elements[key]) {
-        if (
-          ['INPUT', 'SELECT'].includes(elements[key].tagName) &&
-          elements[key].value
-        ) {
-          filter[`filter[${elements[key].name}]`] = elements[key].value;
-        }
+      const element = elements[key];
+      if (
+        element &&
+        ['INPUT', 'SELECT'].includes(element.tagName) &&
+        element.value
+      ) {
+        filter[`filter[${element.name}]`] = element.value;
       }
     });
 
